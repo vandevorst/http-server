@@ -1,11 +1,12 @@
 import java.io.*;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 public class HttpConnection {
 
-    private static final String OK_RESPONSE = "HTTP/1.1 200 OK\r\n\r\n";
-    private static final String NOT_FOUND_RESPONSE = "HTTP/1.1 404 Not Found\r\n\r\n";
+    private static final String OK_RESPONSE = "HTTP/1.1 200 OK\r\n";
+    private static final String NOT_FOUND_RESPONSE = "HTTP/1.1 404 Not Found\r\n";
 
     private final Socket socket;
 
@@ -33,13 +34,29 @@ public class HttpConnection {
         }
 
         var path = startLineComponents[1];
-        String outputMessage;
-        if (path.equals("/")) {
-            outputMessage = OK_RESPONSE;
-        } else {
-            outputMessage = NOT_FOUND_RESPONSE;
-        }
+        var outputMessage = parsePath(path);
+
         socket.getOutputStream().write(outputMessage.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private String parsePath(String path) {
+        var args = path.split("/");
+        var outputMessage = new StringBuilder();
+        if (args.length == 0) {
+            outputMessage.append(OK_RESPONSE);
+            outputMessage.append("\r\n");
+        } else if (args[1].equals("echo")) {
+            outputMessage.append(OK_RESPONSE);
+            outputMessage.append("Content-Type: text/plain\r\n");
+            var message = args.length > 2 ? args[2] : "";
+            outputMessage.append(String.format("Content-Length: %d\r\n", message.length()));
+            outputMessage.append("\r\n");
+            outputMessage.append(message);
+        } else {
+            outputMessage.append(NOT_FOUND_RESPONSE);
+            outputMessage.append("\r\n");
+        }
+        return outputMessage.toString();
     }
 
 }
