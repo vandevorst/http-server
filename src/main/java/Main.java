@@ -23,7 +23,7 @@ public class Main {
     if (args.length >= 2 && args[0].equals("--directory")) {
         directory = args[1];
     }
-    var service = new Service(directory);
+    var service = new CCRequestHandler(directory);
     var httpServer = HttpServer.create(CONCURRENCY, 4221, service);
     EXECUTOR_SERVICE.submit(httpServer::start);
   }
