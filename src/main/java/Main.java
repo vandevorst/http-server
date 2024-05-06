@@ -15,15 +15,17 @@ public class Main {
     private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(CONCURRENCY + 1);
 
 
-  public static void main(String[] args) throws InterruptedException {
+  public static void main(String[] args) throws IOException {
     // You can use print statements as follows for debugging, they'll be visible when running tests.
     System.out.println("Logs from your program will appear here!");
-     try {
-         var httpServer = HttpServer.create(CONCURRENCY, 4221);
-         EXECUTOR_SERVICE.submit(httpServer::start);
-     } catch (IOException e) {
-       System.out.println("IOException: " + e.getMessage());
-     }
+
+    var directory = "";
+    if (args.length >= 2 && args[0].equals("--directory")) {
+        directory = args[1];
+    }
+    var service = new Service(directory);
+    var httpServer = HttpServer.create(CONCURRENCY, 4221, service);
+    EXECUTOR_SERVICE.submit(httpServer::start);
   }
 
   private void test(int concurrency) {

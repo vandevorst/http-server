@@ -19,8 +19,14 @@ public class HttpServer implements Closeable {
 
     public record Request(String requestType, String path, String version, Map<String, String> headers) {}
     public record Response(int status, @Nullable String body, Map<String, String> headers) {
+        public static Response plainText(String body) {
+            return new Response(200, body, Map.of(
+                    "Content-Type", "text/plain",
+                    "Content-Length", String.valueOf(body.length())));
+        }
         public static Response empty() { return new Response(200, null, Map.of()); }
         public static Response notFound() { return new Response(404, null, Map.of()); }
+        public static Response serverError() { return new Response(500, null, Map.of()); }
     }
 
     private static final String OK_RESPONSE = "HTTP/1.1 200 OK\r\n";
@@ -32,11 +38,10 @@ public class HttpServer implements Closeable {
     private final AtomicBoolean shutdown = new AtomicBoolean(false);
     private final Service service;
 
-    public static HttpServer create(int concurrency, int port) throws IOException {
+    public static HttpServer create(int concurrency, int port, Service service) throws IOException {
         var serverSocket = new ServerSocket(port);
         serverSocket.setReuseAddress(true);
         var executor = Executors.newFixedThreadPool(concurrency);
-        var service = new Service();
         return new HttpServer(executor, serverSocket, service);
     }
 
